@@ -1,0 +1,16 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Environment variables
+.env
+
+# Build files
+dist/
+build/
+
+# OS
+.DS_Store
+
+# Vite
+client/dist/
