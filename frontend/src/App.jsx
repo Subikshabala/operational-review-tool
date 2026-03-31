@@ -23,7 +23,6 @@ export default function App() {
 
   useEffect(() => {
     init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount only
 
   return (
