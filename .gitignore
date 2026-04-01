@@ -5,4 +5,4 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
-    
+REACT_APP_API_URL = https://operational-review-tool-backend.onrender.com/api
