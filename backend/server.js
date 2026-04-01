@@ -14,20 +14,13 @@ const app = express();
 app.use(helmet());
 
 // CORS
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:3000',
-  'http://localhost:3001',
-  'https://operational-review-tool.vercel.app/', 
-];
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error('Not allowed by CORS'));
-  },
+  origin: true,
   credentials: true,
 }));
+
+// ✅ handle preflight
+app.options('*', cors());
 
 // Rate limiting
 const globalLimiter = rateLimit({
