@@ -67,3 +67,19 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const result = await require('./db/pool').query('SELECT NOW()');
+    res.json({
+      status: 'DB connected',
+      time: result.rows[0]
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      status: 'DB connection failed',
+      error: err.message
+    });
+  }
+});
