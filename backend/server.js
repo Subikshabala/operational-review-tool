@@ -16,8 +16,8 @@ app.use(helmet());
 // CORS
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
-  'http://localhost:3000',
-  'http://localhost:3001', // React sometimes uses 3001 if 3000 is taken
+  'http://localhost:3001',
+  'https://operational-review-tool.vercel.app/', 
 ];
 app.use(cors({
   origin: (origin, callback) => {
