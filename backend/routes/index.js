@@ -1,6 +1,12 @@
 const express = require('express');
+const multer = require('multer');
 const { body, param } = require('express-validator');
 const router = express.Router();
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
 
 const { authenticate, authorize, collegeScope } = require('../middleware/auth');
 const authController = require('../controllers/authController');
@@ -47,6 +53,14 @@ router.post('/members', authenticate, collegeScope, authorize('admin', 'hod'),
 
 router.put('/members/:id', authenticate, collegeScope, authorize('admin', 'hod'), membersController.updateMember);
 router.delete('/members/:id', authenticate, collegeScope, authorize('admin'), membersController.removeMember);
+
+router.post('/members/bulk-upload',
+  authenticate,
+  collegeScope,
+  authorize('admin'),
+  upload.single('file'),
+  membersController.bulkUploadStudents
+);
 
 // ─── PERFORMANCE METRICS ──────────────────────────────────────────────
 router.get('/metrics', authenticate, collegeScope, reviewItemsController.getItems);

@@ -18,7 +18,10 @@ export default function SessionDetailPage() {
   const [localValues, setLocalValues] = useState({});
   const [saving, setSaving] = useState({});
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', assigned_to: '', priority: 'medium', due_date: '' });
+  const [taskForm, setTaskForm] = useState({
+    title: '', description: '', assigned_to: '', priority: 'medium', due_date: '',
+    assignment_type: 'individual', department_names: [], roll_start: '', roll_end: ''
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -114,7 +117,10 @@ export default function SessionDetailPage() {
     try {
       await api.post('/tasks', { ...taskForm, session_id: id });
       setShowTaskForm(false);
-      setTaskForm({ title: '', description: '', assigned_to: '', priority: 'medium', due_date: '' });
+      setTaskForm({
+        title: '', description: '', assigned_to: '', priority: 'medium', due_date: '',
+        assignment_type: 'individual', department_names: [], roll_start: '', roll_end: ''
+      });
       fetchAll();
     } catch (err) {
       alert(err.response?.data?.error || 'Error creating task');
@@ -179,14 +185,7 @@ export default function SessionDetailPage() {
                 <label style={label}>Description</label>
                 <textarea value={taskForm.description} onChange={(e) => setTaskForm((f) => ({ ...f, description: e.target.value }))} rows={2} style={{ ...input, resize: 'vertical' }} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 12 }}>
-                <div style={fieldGroup}>
-                  <label style={label}>Assign To</label>
-                  <select value={taskForm.assigned_to} onChange={(e) => setTaskForm((f) => ({ ...f, assigned_to: e.target.value }))} style={input}>
-                    <option value="">— Unassigned —</option>
-                    {members.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
-                  </select>
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                 <div style={fieldGroup}>
                   <label style={label}>Priority</label>
                   <select value={taskForm.priority} onChange={(e) => setTaskForm((f) => ({ ...f, priority: e.target.value }))} style={input}>
@@ -197,6 +196,82 @@ export default function SessionDetailPage() {
                   <label style={label}>Due Date</label>
                   <input type="date" value={taskForm.due_date} onChange={(e) => setTaskForm((f) => ({ ...f, due_date: e.target.value }))} style={input} />
                 </div>
+              </div>
+
+              <div style={{ ...fieldGroup, marginTop: 12, border: '1px solid #e2e8f0', padding: 12, borderRadius: 8, background: '#f8fafc' }}>
+                <label style={{ ...label, color: '#1e3a5f', fontWeight: 600 }}>Assign To Scope</label>
+                <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                  {['individual', 'department', 'college'].map((type) => (
+                    <label key={type} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', textTransform: 'capitalize' }}>
+                      <input
+                        type="radio"
+                        name="assignment_type"
+                        checked={taskForm.assignment_type === type}
+                        onChange={() => setTaskForm(f => ({ ...f, assignment_type: type, assigned_to: '', department_names: [] }))}
+                      />
+                      {type === 'individual' ? 'User' : type}
+                    </label>
+                  ))}
+                </div>
+
+                {taskForm.assignment_type === 'individual' && (
+                  <div style={fieldGroup}>
+                    <label style={label}>Select Individual</label>
+                    <select value={taskForm.assigned_to} onChange={(e) => setTaskForm((f) => ({ ...f, assigned_to: e.target.value }))} style={input}>
+                      <option value="">— Unassigned —</option>
+                      {members.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {taskForm.assignment_type === 'department' && (
+                  <div style={fieldGroup}>
+                    <label style={label}>Select Department(s)</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, background: 'white', padding: 10, borderRadius: 8, border: '1px solid #e2e8f0', maxHeight: 150, overflow: 'auto' }}>
+                      {Array.from(new Set(members.map(m => m.department).filter(Boolean))).sort().map(d => (
+                        <label key={d} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={taskForm.department_names.includes(d)}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setTaskForm(f => ({
+                                ...f,
+                                department_names: checked 
+                                  ? [...f.department_names, d]
+                                  : f.department_names.filter(name => name !== d)
+                              }));
+                            }}
+                          />
+                          {d}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(taskForm.assignment_type === 'department' || taskForm.assignment_type === 'college') && (
+                  <div style={{ marginTop: 8 }}>
+                    <label style={label}>Roll Number Range (Optional - for students only)</label>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        placeholder="Start (e.g. 101)"
+                        value={taskForm.roll_start}
+                        onChange={(e) => setTaskForm(f => ({ ...f, roll_start: e.target.value }))}
+                        style={{ ...input, flex: 1 }}
+                      />
+                      <span style={{ fontSize: 12, color: '#64748b' }}>to</span>
+                      <input
+                        type="number"
+                        placeholder="End (e.g. 150)"
+                        value={taskForm.roll_end}
+                        onChange={(e) => setTaskForm(f => ({ ...f, roll_end: e.target.value }))}
+                        style={{ ...input, flex: 1 }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
                 <button type="button" onClick={() => setShowTaskForm(false)} style={btnSecondary}>Cancel</button>
@@ -216,11 +291,13 @@ export default function SessionDetailPage() {
             const status = entry.status || 'pending';
             return (
               <div key={entry.review_item_id} style={{
-                background: STATUS_BG[status],
-                border: `1px solid ${STATUS_COLORS[status]}30`,
-                borderLeft: `4px solid ${STATUS_COLORS[status]}`,
-                borderRadius: 10, padding: 16, marginBottom: 10,
-              }}>
+                background: 'white',
+                border: `1px solid ${STATUS_COLORS[status]}20`,
+                borderRadius: 12, padding: 20, marginBottom: 16,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                display: 'flex', flexDirection: 'column',
+              }} className="metric-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: '#1e293b' }}>{entry.name}</div>
@@ -231,12 +308,17 @@ export default function SessionDetailPage() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{
-                      fontSize: 13, fontWeight: 700, padding: '4px 12px', borderRadius: 20,
-                      background: STATUS_COLORS[status] + '20', color: STATUS_COLORS[status],
-                    }}>
-                      {status === 'green' ? '🟢 On Track' : status === 'yellow' ? '🟡 At Risk' : status === 'red' ? '🔴 Critical' : '⏳ Pending'}
-                    </span>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: 2 }}>Status</div>
+                      <span style={{
+                        fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
+                        background: STATUS_COLORS[status] + '15', color: STATUS_COLORS[status],
+                        border: `1px solid ${STATUS_COLORS[status]}30`,
+                        display: 'inline-flex', alignItems: 'center', gap: 4
+                      }}>
+                        {status === 'green' ? '✓ On Track' : status === 'yellow' ? '⚠ At Risk' : status === 'red' ? '✖ Critical' : '⌛ Pending'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

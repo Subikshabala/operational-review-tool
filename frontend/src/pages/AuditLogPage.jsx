@@ -40,7 +40,7 @@ export default function AuditLogPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead style={{ background: '#f8fafc' }}>
             <tr>
-              {['Timestamp', 'User', 'Action', 'Table', 'IP'].map((h) => (
+              {['Timestamp', 'User', 'Action', 'Table'].map((h) => (
                 <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#64748b', borderBottom: '1px solid #e2e8f0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
               ))}
             </tr>
@@ -66,9 +66,6 @@ export default function AuditLogPage() {
                 </td>
                 <td style={{ padding: '10px 16px', color: '#64748b', fontSize: 12 }}>
                   {log.table_name || '—'}
-                </td>
-                <td style={{ padding: '10px 16px', color: '#94a3b8', fontSize: 11 }}>
-                  {log.ip_address || '—'}
                 </td>
               </tr>
             ))}

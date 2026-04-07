@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
                CHECK (role IN ('admin','hod','faculty','student')),
   department   VARCHAR(255),
   designation  VARCHAR(255),  -- e.g. "Professor", "HOD", "Student - 3rd Year"
+  roll_no      INTEGER,
   created_at   TIMESTAMPTZ DEFAULT NOW(),
   updated_at   TIMESTAMPTZ DEFAULT NOW()
 );
