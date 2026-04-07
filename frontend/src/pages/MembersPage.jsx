@@ -18,15 +18,18 @@ const ROLE_COLORS = {
 
 const DEPARTMENTS = ['Computer Science', 'Electronics', 'Mechanical', 'Civil', 'Information Technology', 'MBA', 'MCA', 'Admin', 'Library', 'Sports'];
 
-const defaultForm = { name: '', email: '', password: '', role: 'faculty', department: '', designation: '' };
+const defaultForm = { name: '', email: '', password: '', role: 'faculty', department: '', designation: '', roll_no: '' };
 
 export default function MembersPage() {
   const [members, setMembers] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkFile, setBulkFile] = useState(null);
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const isHOD = useAuthStore((s) => s.isHOD());
+  const isAdmin = useAuthStore((s) => s.user?.role === 'admin');
   const currentUser = useAuthStore((s) => s.user);
 
   const fetchMembers = async () => {
@@ -68,6 +71,25 @@ export default function MembersPage() {
     }
   };
 
+  const handleBulkUpload = async (e) => {
+    e.preventDefault();
+    if (!bulkFile) return;
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', bulkFile);
+    try {
+      const res = await api.post('/members/bulk-upload', formData);
+      alert(res.data.message);
+      setShowBulkModal(false);
+      setBulkFile(null);
+      fetchMembers();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error during bulk upload');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const byRole = (role) => members.filter((m) => m.role === role);
 
   if (pageLoading) return <div style={{ padding: 40, color: '#64748b', textAlign: 'center' }}>⏳ Loading members...</div>;
@@ -81,9 +103,14 @@ export default function MembersPage() {
             {members.length} member{members.length !== 1 ? 's' : ''} in your college
           </p>
         </div>
-        {isHOD && (
-          <button onClick={() => setShowForm(true)} style={btnPrimary}>+ Add Member</button>
-        )}
+        <div style={{ display: 'flex', gap: 12 }}>
+          {isAdmin && (
+            <button onClick={() => setShowBulkModal(true)} style={btnSecondary}>📂 Bulk Student Upload</button>
+          )}
+          {isHOD && (
+            <button onClick={() => setShowForm(true)} style={btnPrimary}>+ Add Member</button>
+          )}
+        </div>
       </div>
 
       {/* Role summary cards */}
@@ -146,7 +173,11 @@ export default function MembersPage() {
                 </div>
                 <div style={fieldGroup}>
                   <label style={label}>Designation</label>
-                  <input value={form.designation} onChange={setField('designation')} placeholder="e.g. Professor, HOD, Student - 3rd Year" style={input} />
+                  <input value={form.designation} onChange={setField('designation')} placeholder="e.g. Professor, HOD..." style={input} />
+                </div>
+                <div style={fieldGroup}>
+                  <label style={label}>Roll Number (for students)</label>
+                  <input type="number" value={form.roll_no} onChange={setField('roll_no')} placeholder="e.g. 101, 2035" style={input} />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
@@ -193,7 +224,7 @@ export default function MembersPage() {
                       )}
                       {member.department && (
                         <div style={{ fontSize: 11, marginTop: 4, color: colors.text, background: colors.bg, display: 'inline-block', padding: '1px 8px', borderRadius: 10 }}>
-                          🏢 {member.department}
+                          🏢 {member.department} {member.roll_no && `• Roll: ${member.roll_no}`}
                         </div>
                       )}
                     </div>
@@ -218,6 +249,45 @@ export default function MembersPage() {
         <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>
           <div style={{ fontSize: 40, marginBottom: 10 }}>👥</div>
           <div>No members added yet. Click "+ Add Member" to get started.</div>
+        </div>
+      )}
+
+      {/* Bulk Upload Modal */}
+      {showBulkModal && (
+        <div style={overlay}>
+          <div style={modal}>
+            <h2 style={{ color: '#1e3a5f', marginBottom: 16 }}>📂 Bulk Student Upload</h2>
+            <p style={{ color: '#64748b', fontSize: 14, marginBottom: 20 }}>
+              Upload an Excel/CSV file containing student records. 
+              Required columns: <strong>Name, Email, Department</strong>. 
+              Optional: <strong>Roll Number, Designation</strong>.
+            </p>
+            
+            <form onSubmit={handleBulkUpload}>
+               <div style={{ 
+                 border: '2px dashed #cbd5e1', borderRadius: 12, padding: 32, 
+                 textAlign: 'center', marginBottom: 24, background: '#f8fafc' 
+               }}>
+                 <input 
+                   type="file" 
+                   accept=".xlsx,.xls,.csv" 
+                   onChange={(e) => setBulkFile(e.target.files[0])} 
+                   required
+                   style={{ fontSize: 14 }}
+                 />
+                 <div style={{ marginTop: 8, fontSize: 12, color: '#94a3b8' }}>
+                   Max file size: 5MB
+                 </div>
+               </div>
+               
+               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                 <button type="button" onClick={() => setShowBulkModal(false)} style={btnSecondary}>Cancel</button>
+                 <button type="submit" disabled={loading || !bulkFile} style={btnPrimary}>
+                   {loading ? 'Processing...' : 'Upload & Process'}
+                 </button>
+               </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

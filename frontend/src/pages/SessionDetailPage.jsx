@@ -18,7 +18,10 @@ export default function SessionDetailPage() {
   const [localValues, setLocalValues] = useState({});
   const [saving, setSaving] = useState({});
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', assigned_to: '', priority: 'medium', due_date: '' });
+  const [taskForm, setTaskForm] = useState({ 
+    title: '', description: '', assigned_to: '', priority: 'medium', due_date: '',
+    assignment_type: 'individual', department_names: [], roll_start: '', roll_end: ''
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -29,11 +32,15 @@ export default function SessionDetailPage() {
         api.get(`/sessions/${id}`),
         api.get('/members'),
       ]);
-      const { session: s, entries: e, tasks: t } = sessionRes.data;
+      const { session: s, entries: e = [], tasks: t = [] } = sessionRes.data || {};
+      const m = membersRes.data?.members || [];
+      
+      if (!s) throw new Error('Session data missing in response');
+
       setSession(s);
       setEntries(e);
       setTasks(t);
-      setMembers(membersRes.data.members);
+      setMembers(m);
 
       // Pre-populate local values from saved entries (don't overwrite unsaved edits on refresh)
       setLocalValues((prev) => {
@@ -50,7 +57,8 @@ export default function SessionDetailPage() {
         return vals;
       });
     } catch (err) {
-      setError('Failed to load session. Please refresh.');
+      const msg = err.response?.data?.error || err.message || 'Failed to load session';
+      setError(`${msg}. Please try refreshing.`);
       console.error('fetchAll error:', err);
     } finally {
       setLoading(false);
@@ -126,7 +134,7 @@ export default function SessionDetailPage() {
   if (!session) return <div style={{ padding: 40, color: '#64748b' }}>Session not found</div>;
 
   const isSubmitted = session.status === 'submitted';
-  const grouped = entries.reduce((acc, e) => {
+  const grouped = (entries || []).reduce((acc, e) => {
     const cat = e.category || 'General';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(e);
@@ -168,39 +176,161 @@ export default function SessionDetailPage() {
       {/* Task Modal */}
       {showTaskForm && (
         <div style={overlay}>
-          <div style={modal}>
-            <h2 style={{ marginBottom: 16, color: '#1e3a5f' }}>✅ New Task</h2>
+          <div style={{ ...modal, borderTop: '6px solid #1e3a5f' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1e3a5f' }}>🎯 Create New Action Item</h2>
+              <button onClick={() => setShowTaskForm(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
+            </div>
+            
             <form onSubmit={handleCreateTask}>
               <div style={fieldGroup}>
                 <label style={label}>Task Title *</label>
-                <input value={taskForm.title} onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))} required style={input} placeholder="e.g. Follow up on low attendance in CSE" />
+                <input 
+                  value={taskForm.title} 
+                  onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))} 
+                  required 
+                  style={input} 
+                  placeholder="e.g., Address 15% drop in CSE attendance" 
+                />
               </div>
               <div style={fieldGroup}>
-                <label style={label}>Description</label>
-                <textarea value={taskForm.description} onChange={(e) => setTaskForm((f) => ({ ...f, description: e.target.value }))} rows={2} style={{ ...input, resize: 'vertical' }} />
+                <label style={label}>Detailed Description</label>
+                <textarea 
+                  value={taskForm.description} 
+                  onChange={(e) => setTaskForm((f) => ({ ...f, description: e.target.value }))} 
+                  rows={3} 
+                  style={{ ...input, resize: 'vertical' }} 
+                  placeholder="Steps to be taken..."
+                />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
                 <div style={fieldGroup}>
-                  <label style={label}>Assign To</label>
-                  <select value={taskForm.assigned_to} onChange={(e) => setTaskForm((f) => ({ ...f, assigned_to: e.target.value }))} style={input}>
-                    <option value="">— Unassigned —</option>
-                    {members.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
-                  </select>
-                </div>
-                <div style={fieldGroup}>
-                  <label style={label}>Priority</label>
+                  <label style={label}>Priority Level</label>
                   <select value={taskForm.priority} onChange={(e) => setTaskForm((f) => ({ ...f, priority: e.target.value }))} style={input}>
-                    {['low','medium','high','critical'].map((p) => <option key={p}>{p}</option>)}
+                    <option value="low">Low Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="high">High Priority</option>
+                    <option value="critical">Critical / Urgent</option>
                   </select>
                 </div>
                 <div style={fieldGroup}>
-                  <label style={label}>Due Date</label>
+                  <label style={label}>Expected Completion</label>
                   <input type="date" value={taskForm.due_date} onChange={(e) => setTaskForm((f) => ({ ...f, due_date: e.target.value }))} style={input} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+
+              <div style={{ 
+                marginTop: 20, padding: 20, borderRadius: 12, 
+                background: '#f1f5f9', border: '1px solid #e2e8f0' 
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#1e3a5f', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  📡 Assignment Reach
+                </div>
+                
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16, background: '#e2e8f0', padding: 4, borderRadius: 8 }}>
+                  {['individual', 'department', 'college'].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setTaskForm(f => ({ ...f, assignment_type: type, assigned_to: '', department_names: [] }))}
+                      style={{
+                        flex: 1, padding: '8px 12px', borderRadius: 6, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        background: taskForm.assignment_type === type ? 'white' : 'transparent',
+                        color: taskForm.assignment_type === type ? '#1e3a5f' : '#64748b',
+                        boxShadow: taskForm.assignment_type === type ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                        transition: '0.2s',
+                        textTransform: 'capitalize'
+                      }}
+                    >
+                      {type === 'individual' ? '👤 Personal' : type === 'department' ? '🏢 Dept.' : '🏫 Institute'}
+                    </button>
+                  ))}
+                </div>
+
+                {taskForm.assignment_type === 'individual' && (
+                  <div style={fieldGroup}>
+                    <label style={label}>Select Assignee</label>
+                    <select value={taskForm.assigned_to} onChange={(e) => setTaskForm((f) => ({ ...f, assigned_to: e.target.value }))} style={input}>
+                      <option value="">— Choose Member —</option>
+                      {(members || []).map((m) => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {taskForm.assignment_type === 'department' && (
+                  <div style={fieldGroup}>
+                    <label style={label}>Target Departments</label>
+                    <div style={{ 
+                      display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
+                      gap: 8, background: 'white', padding: 12, borderRadius: 8, 
+                      border: '1px solid #cbd5e1', maxHeight: 120, overflow: 'auto' 
+                    }}>
+                      {Array.from(new Set((members || []).map(m => m.department).filter(Boolean))).sort().map(d => (
+                        <label key={d} style={{ 
+                          display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer',
+                          background: taskForm.department_names.includes(d) ? '#f0f9ff' : 'transparent',
+                          padding: '4px 8px', borderRadius: 4, transition: '0.1s'
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={taskForm.department_names.includes(d)}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setTaskForm(f => ({
+                                ...f,
+                                department_names: checked 
+                                  ? [...f.department_names, d]
+                                  : f.department_names.filter(name => name !== d)
+                                }));
+                            }}
+                          />
+                          {d}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {taskForm.assignment_type === 'college' && (
+                  <div style={{ textAlign: 'center', padding: '10px 0', color: '#64748b', fontSize: 12 }}>
+                    Task will be assigned to <strong>all members</strong> in the institute.
+                  </div>
+                )}
+
+                {(taskForm.assignment_type === 'department' || taskForm.assignment_type === 'college') && (
+                  <div style={{ marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
+                    <label style={{ ...label, fontSize: 12 }}>Student Identifier Range (Optional)</label>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="number"
+                          placeholder="From Roll No."
+                          value={taskForm.roll_start}
+                          onChange={(e) => setTaskForm(f => ({ ...f, roll_start: e.target.value }))}
+                          style={{ ...input, width: '100%' }}
+                        />
+                      </div>
+                      <div style={{ color: '#cbd5e1' }}>→</div>
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="number"
+                          placeholder="To Roll No."
+                          value={taskForm.roll_end}
+                          onChange={(e) => setTaskForm(f => ({ ...f, roll_end: e.target.value }))}
+                          style={{ ...input, width: '100%' }}
+                        />
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+                      Leave empty to include all roles. If set, only students in this range receive the task.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
                 <button type="button" onClick={() => setShowTaskForm(false)} style={btnSecondary}>Cancel</button>
-                <button type="submit" style={btnPrimary}>Create Task</button>
+                <button type="submit" style={{ ...btnPrimary, padding: '10px 24px', borderRadius: 10 }}>🚀 Launch Task</button>
               </div>
             </form>
           </div>
@@ -297,7 +427,7 @@ export default function SessionDetailPage() {
       {tasks.length > 0 && (
         <div style={{ marginTop: 24, background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 6px rgba(0,0,0,0.08)' }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, color: '#1e3a5f', marginBottom: 14 }}>✅ Tasks from this Session</h3>
-          {tasks.map((task) => {
+          {(tasks || []).map((task) => {
             const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'resolved';
             return (
               <div key={task.id} style={{
