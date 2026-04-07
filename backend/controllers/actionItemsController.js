@@ -42,66 +42,64 @@ const createTask = async (req, res, next) => {
 
   const {
     title, description, session_id, entry_id, assigned_to, priority, due_date,
-    assignment_type, department_names, roll_start, roll_end
+    assignment_type, department_names, role_names, roll_start, roll_end
   } = req.body;
 
   try {
-    let targetUserIds = [];
+    let createdTasks = [];
 
-    if (assignment_type === 'department' && Array.isArray(department_names) && department_names.length > 0) {
-      // Fetch users in selected departments
-      let userQuery = `SELECT id FROM users WHERE college_id = $1 AND department = ANY($2)`;
-      const userParams = [req.collegeId, department_names];
-
-      if (roll_start && roll_end) {
-        userParams.push(parseInt(roll_start), parseInt(roll_end));
-        userQuery += ` AND roll_no BETWEEN $${userParams.length - 1} AND $${userParams.length}`;
-      }
-      const userRes = await pool.query(userQuery, userParams);
-      targetUserIds = userRes.rows.map(u => u.id);
-
-      if (targetUserIds.length === 0) {
-        return res.status(404).json({ error: 'No matching users found for the selected department(s).' });
-      }
-    } else if (assignment_type === 'college') {
-      // Fetch all users in college
-      let userQuery = `SELECT id FROM users WHERE college_id = $1`;
-      const userParams = [req.collegeId];
-
-      if (roll_start && roll_end) {
-        userParams.push(parseInt(roll_start), parseInt(roll_end));
-        userQuery += ` AND roll_no BETWEEN $${userParams.length - 1} AND $${userParams.length}`;
-      }
-      const userRes = await pool.query(userQuery, userParams);
-      targetUserIds = userRes.rows.map(u => u.id);
-
-      if (targetUserIds.length === 0) {
-        return res.status(404).json({ error: 'No matching users found for the institution-wide assignment.' });
-      }
-    } else {
-      // Default: Individual
-      if (assigned_to) targetUserIds = [assigned_to];
-      else targetUserIds = [null]; // Unassigned
-    }
-
-    const createdTasks = [];
-    for (const uid of targetUserIds) {
+    if (assignment_type === 'individual') {
       const result = await pool.query(
         `INSERT INTO action_items
            (college_id, session_id, entry_id, title, description, assigned_to, created_by, priority, due_date)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
          RETURNING *`,
         [req.collegeId, session_id || null, entry_id || null, title, description,
-         uid, req.user.id, priority || 'medium', due_date || null]
+         assigned_to || null, req.user.id, priority || 'medium', due_date || null]
       );
-      createdTasks.push(result.rows[0]);
+      createdTasks = result.rows;
+    } else {
+      // Scalable Bulk Assignment using INSERT ... SELECT
+      const depts = (Array.isArray(department_names) && department_names.length > 0) ? department_names : null;
+      const roles = (Array.isArray(role_names) && role_names.length > 0) ? role_names : null;
+      const rStart = roll_start ? parseInt(roll_start) : null;
+      const rEnd = roll_end ? parseInt(roll_end) : null;
+
+      const bulkQuery = `
+        INSERT INTO action_items 
+          (college_id, session_id, entry_id, title, description, assigned_to, created_by, priority, due_date)
+        SELECT 
+          $1, $2, $3, $4, $5, id, $6, $7, $8
+        FROM users
+        WHERE college_id = $1
+          AND ($9::text[] IS NULL OR department = ANY($9))
+          AND ($10::text[] IS NULL OR role = ANY($10))
+          AND ($11::int IS NULL OR $12::int IS NULL OR (roll_no >= $11 AND roll_no <= $12))
+        RETURNING *
+      `;
+
+      const result = await pool.query(bulkQuery, [
+        req.collegeId, session_id || null, entry_id || null, title, description,
+        req.user.id, priority || 'medium', due_date || null,
+        depts, roles, rStart, rEnd
+      ]);
+      
+      createdTasks = result.rows;
+
+      if (createdTasks.length === 0) {
+        return res.status(404).json({ error: 'No matching users found for the selected criteria.' });
+      }
     }
 
     await logAudit({
       collegeId: req.collegeId, userId: req.user.id, userName: req.user.name,
       action: createdTasks.length > 1 ? 'BULK_CREATE_TASK' : 'CREATE_TASK',
       tableName: 'action_items', recordId: createdTasks.length === 1 ? createdTasks[0].id : null,
-      newValues: { count: createdTasks.length, title, assignment_type, departments: department_names }, ipAddress: req.ip
+      newValues: { 
+        count: createdTasks.length, title, assignment_type, 
+        filters: { department_names, role_names, roll_start, roll_end } 
+      }, 
+      ipAddress: req.ip
     });
 
     res.status(201).json({

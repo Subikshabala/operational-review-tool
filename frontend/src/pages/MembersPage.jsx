@@ -10,8 +10,8 @@ const ROLES = [
 ];
 
 const ROLE_COLORS = {
-  admin:   { bg: '#fef3c7', text: '#92400e' },
-  hod:     { bg: '#dbeafe', text: '#1e40af' },
+  admin: { bg: '#fef3c7', text: '#92400e' },
+  hod: { bg: '#dbeafe', text: '#1e40af' },
   faculty: { bg: '#d1fae5', text: '#065f46' },
   student: { bg: '#ede9fe', text: '#5b21b6' },
 };
@@ -105,7 +105,7 @@ export default function MembersPage() {
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
           {isAdmin && (
-            <button onClick={() => setShowBulkModal(true)} style={btnSecondary}>📂 Bulk Student Upload</button>
+            <button onClick={() => setShowBulkModal(true)} style={btnSecondary}>📂 Upload</button>
           )}
           {isHOD && (
             <button onClick={() => setShowForm(true)} style={btnPrimary}>+ Add Member</button>
@@ -256,36 +256,36 @@ export default function MembersPage() {
       {showBulkModal && (
         <div style={overlay}>
           <div style={modal}>
-            <h2 style={{ color: '#1e3a5f', marginBottom: 16 }}>📂 Bulk Student Upload</h2>
+            <h2 style={{ color: '#1e3a5f', marginBottom: 16 }}>📂 Upload</h2>
             <p style={{ color: '#64748b', fontSize: 14, marginBottom: 20 }}>
-              Upload an Excel/CSV file containing student records. 
-              Required columns: <strong>Name, Email, Department</strong>. 
+              Upload an Excel/CSV file containing records.
+              Required columns: <strong>Name, Email, Department</strong>.
               Optional: <strong>Roll Number, Designation</strong>.
             </p>
-            
+
             <form onSubmit={handleBulkUpload}>
-               <div style={{ 
-                 border: '2px dashed #cbd5e1', borderRadius: 12, padding: 32, 
-                 textAlign: 'center', marginBottom: 24, background: '#f8fafc' 
-               }}>
-                 <input 
-                   type="file" 
-                   accept=".xlsx,.xls,.csv" 
-                   onChange={(e) => setBulkFile(e.target.files[0])} 
-                   required
-                   style={{ fontSize: 14 }}
-                 />
-                 <div style={{ marginTop: 8, fontSize: 12, color: '#94a3b8' }}>
-                   Max file size: 5MB
-                 </div>
-               </div>
-               
-               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-                 <button type="button" onClick={() => setShowBulkModal(false)} style={btnSecondary}>Cancel</button>
-                 <button type="submit" disabled={loading || !bulkFile} style={btnPrimary}>
-                   {loading ? 'Processing...' : 'Upload & Process'}
-                 </button>
-               </div>
+              <div style={{
+                border: '2px dashed #cbd5e1', borderRadius: 12, padding: 32,
+                textAlign: 'center', marginBottom: 24, background: '#f8fafc'
+              }}>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={(e) => setBulkFile(e.target.files[0])}
+                  required
+                  style={{ fontSize: 14 }}
+                />
+                <div style={{ marginTop: 8, fontSize: 12, color: '#94a3b8' }}>
+                  Max file size: 5MB
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setShowBulkModal(false)} style={btnSecondary}>Cancel</button>
+                <button type="submit" disabled={loading || !bulkFile} style={btnPrimary}>
+                  {loading ? 'Processing...' : 'Upload & Process'}
+                </button>
+              </div>
             </form>
           </div>
         </div>

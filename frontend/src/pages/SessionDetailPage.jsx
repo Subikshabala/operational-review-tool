@@ -18,9 +18,9 @@ export default function SessionDetailPage() {
   const [localValues, setLocalValues] = useState({});
   const [saving, setSaving] = useState({});
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [taskForm, setTaskForm] = useState({ 
+  const [taskForm, setTaskForm] = useState({
     title: '', description: '', assigned_to: '', priority: 'medium', due_date: '',
-    assignment_type: 'individual', department_names: [], roll_start: '', roll_end: ''
+    assignment_type: 'individual', department_names: [], role_names: [], roll_start: '', roll_end: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,7 +34,7 @@ export default function SessionDetailPage() {
       ]);
       const { session: s, entries: e = [], tasks: t = [] } = sessionRes.data || {};
       const m = membersRes.data?.members || [];
-      
+
       if (!s) throw new Error('Session data missing in response');
 
       setSession(s);
@@ -122,7 +122,10 @@ export default function SessionDetailPage() {
     try {
       await api.post('/tasks', { ...taskForm, session_id: id });
       setShowTaskForm(false);
-      setTaskForm({ title: '', description: '', assigned_to: '', priority: 'medium', due_date: '' });
+      setTaskForm({
+        title: '', description: '', assigned_to: '', priority: 'medium', due_date: '',
+        assignment_type: 'individual', department_names: [], role_names: [], roll_start: '', roll_end: ''
+      });
       fetchAll();
     } catch (err) {
       alert(err.response?.data?.error || 'Error creating task');
@@ -130,7 +133,7 @@ export default function SessionDetailPage() {
   };
 
   if (loading) return <div style={{ padding: 40, color: '#64748b', textAlign: 'center' }}>⏳ Loading session...</div>;
-  if (error)   return <div style={{ padding: 40, color: '#dc2626', textAlign: 'center' }}>⚠️ {error}<br /><button onClick={fetchAll} style={{ marginTop: 12, padding: '8px 16px', background: '#1e3a5f', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Retry</button></div>;
+  if (error) return <div style={{ padding: 40, color: '#dc2626', textAlign: 'center' }}>⚠️ {error}<br /><button onClick={fetchAll} style={{ marginTop: 12, padding: '8px 16px', background: '#1e3a5f', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Retry</button></div>;
   if (!session) return <div style={{ padding: 40, color: '#64748b' }}>Session not found</div>;
 
   const isSubmitted = session.status === 'submitted';
@@ -181,25 +184,25 @@ export default function SessionDetailPage() {
               <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1e3a5f' }}>🎯 Create New Action Item</h2>
               <button onClick={() => setShowTaskForm(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#94a3b8' }}>&times;</button>
             </div>
-            
+
             <form onSubmit={handleCreateTask}>
               <div style={fieldGroup}>
                 <label style={label}>Task Title *</label>
-                <input 
-                  value={taskForm.title} 
-                  onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))} 
-                  required 
-                  style={input} 
-                  placeholder="e.g., Address 15% drop in CSE attendance" 
+                <input
+                  value={taskForm.title}
+                  onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))}
+                  required
+                  style={input}
+                  placeholder="e.g., Address 15% drop in CSE attendance"
                 />
               </div>
               <div style={fieldGroup}>
                 <label style={label}>Detailed Description</label>
-                <textarea 
-                  value={taskForm.description} 
-                  onChange={(e) => setTaskForm((f) => ({ ...f, description: e.target.value }))} 
-                  rows={3} 
-                  style={{ ...input, resize: 'vertical' }} 
+                <textarea
+                  value={taskForm.description}
+                  onChange={(e) => setTaskForm((f) => ({ ...f, description: e.target.value }))}
+                  rows={3}
+                  style={{ ...input, resize: 'vertical' }}
                   placeholder="Steps to be taken..."
                 />
               </div>
@@ -219,20 +222,20 @@ export default function SessionDetailPage() {
                 </div>
               </div>
 
-              <div style={{ 
-                marginTop: 20, padding: 20, borderRadius: 12, 
-                background: '#f1f5f9', border: '1px solid #e2e8f0' 
+              <div style={{
+                marginTop: 20, padding: 20, borderRadius: 12,
+                background: '#f1f5f9', border: '1px solid #e2e8f0'
               }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#1e3a5f', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#1e3a5f', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
                   📡 Assignment Reach
                 </div>
-                
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16, background: '#e2e8f0', padding: 4, borderRadius: 8 }}>
-                  {['individual', 'department', 'college'].map((type) => (
+
+                <div style={{ display: 'flex', gap: 8, marginBottom: 20, background: '#e2e8f0', padding: 4, borderRadius: 8 }}>
+                  {['individual', 'group'].map((type) => (
                     <button
                       key={type}
                       type="button"
-                      onClick={() => setTaskForm(f => ({ ...f, assignment_type: type, assigned_to: '', department_names: [] }))}
+                      onClick={() => setTaskForm(f => ({ ...f, assignment_type: type, assigned_to: '', department_names: [], role_names: [] }))}
                       style={{
                         flex: 1, padding: '8px 12px', borderRadius: 6, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         background: taskForm.assignment_type === type ? 'white' : 'transparent',
@@ -242,12 +245,12 @@ export default function SessionDetailPage() {
                         textTransform: 'capitalize'
                       }}
                     >
-                      {type === 'individual' ? '👤 Personal' : type === 'department' ? '🏢 Dept.' : '🏫 Institute'}
+                      {type === 'individual' ? '👤 Personal' : '👥 Group'}
                     </button>
                   ))}
                 </div>
 
-                {taskForm.assignment_type === 'individual' && (
+                {taskForm.assignment_type === 'individual' ? (
                   <div style={fieldGroup}>
                     <label style={label}>Select Assignee</label>
                     <select value={taskForm.assigned_to} onChange={(e) => setTaskForm((f) => ({ ...f, assigned_to: e.target.value }))} style={input}>
@@ -255,76 +258,99 @@ export default function SessionDetailPage() {
                       {(members || []).map((m) => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
                     </select>
                   </div>
-                )}
-
-                {taskForm.assignment_type === 'department' && (
-                  <div style={fieldGroup}>
-                    <label style={label}>Target Departments</label>
-                    <div style={{ 
-                      display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
-                      gap: 8, background: 'white', padding: 12, borderRadius: 8, 
-                      border: '1px solid #cbd5e1', maxHeight: 120, overflow: 'auto' 
-                    }}>
-                      {Array.from(new Set((members || []).map(m => m.department).filter(Boolean))).sort().map(d => (
-                        <label key={d} style={{ 
-                          display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer',
-                          background: taskForm.department_names.includes(d) ? '#f0f9ff' : 'transparent',
-                          padding: '4px 8px', borderRadius: 4, transition: '0.1s'
-                        }}>
-                          <input
-                            type="checkbox"
-                            checked={taskForm.department_names.includes(d)}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              setTaskForm(f => ({
-                                ...f,
-                                department_names: checked 
-                                  ? [...f.department_names, d]
-                                  : f.department_names.filter(name => name !== d)
+                ) : (
+                  <>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={label}>Filter by Role(s)</label>
+                      <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+                        {['hod', 'faculty', 'student'].map(role => (
+                          <label key={role} style={{
+                            display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer',
+                            background: taskForm.role_names.includes(role) ? '#dbeafe' : 'white',
+                            padding: '4px 10px', borderRadius: 6, border: '1px solid #cbd5e1'
+                          }}>
+                            <input
+                              type="checkbox"
+                              checked={taskForm.role_names.includes(role)}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setTaskForm(f => ({
+                                  ...f,
+                                  role_names: checked
+                                    ? [...f.role_names, role]
+                                    : f.role_names.filter(r => r !== role)
                                 }));
-                            }}
+                              }}
+                            />
+                            {role.toUpperCase()}
+                          </label>
+                        ))}
+                      </div>
+                      <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+                        Deselect all to include all roles.
+                      </p>
+                    </div>
+
+                    <div style={fieldGroup}>
+                      <label style={label}>Filter by Department(s)</label>
+                      <div style={{
+                        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                        gap: 8, background: 'white', padding: 12, borderRadius: 8,
+                        border: '1px solid #cbd5e1', maxHeight: 110, overflow: 'auto'
+                      }}>
+                        {Array.from(new Set((members || []).map(m => m.department).filter(Boolean))).sort().map(d => (
+                          <label key={d} style={{
+                            display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer',
+                            background: taskForm.department_names.includes(d) ? '#f0f9ff' : 'transparent',
+                            padding: '4px 8px', borderRadius: 4
+                          }}>
+                            <input
+                              type="checkbox"
+                              checked={taskForm.department_names.includes(d)}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setTaskForm(f => ({
+                                  ...f,
+                                  department_names: checked
+                                    ? [...f.department_names, d]
+                                    : f.department_names.filter(name => name !== d)
+                                }));
+                              }}
+                            />
+                            {d}
+                          </label>
+                        ))}
+                      </div>
+                      <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+                        Deselect all to include all departments.
+                      </p>
+                    </div>
+
+                    <div style={{ marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
+                      <label style={{ ...label, fontSize: 12 }}>Student Identifier Range (Optional)</label>
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}>
+                          <input
+                            type="number"
+                            placeholder="From Roll No."
+                            value={taskForm.roll_start}
+                            onChange={(e) => setTaskForm(f => ({ ...f, roll_start: e.target.value }))}
+                            style={{ ...input, width: '100%' }}
                           />
-                          {d}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {taskForm.assignment_type === 'college' && (
-                  <div style={{ textAlign: 'center', padding: '10px 0', color: '#64748b', fontSize: 12 }}>
-                    Task will be assigned to <strong>all members</strong> in the institute.
-                  </div>
-                )}
-
-                {(taskForm.assignment_type === 'department' || taskForm.assignment_type === 'college') && (
-                  <div style={{ marginTop: 12, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
-                    <label style={{ ...label, fontSize: 12 }}>Student Identifier Range (Optional)</label>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>
-                        <input
-                          type="number"
-                          placeholder="From Roll No."
-                          value={taskForm.roll_start}
-                          onChange={(e) => setTaskForm(f => ({ ...f, roll_start: e.target.value }))}
-                          style={{ ...input, width: '100%' }}
-                        />
-                      </div>
-                      <div style={{ color: '#cbd5e1' }}>→</div>
-                      <div style={{ flex: 1 }}>
-                        <input
-                          type="number"
-                          placeholder="To Roll No."
-                          value={taskForm.roll_end}
-                          onChange={(e) => setTaskForm(f => ({ ...f, roll_end: e.target.value }))}
-                          style={{ ...input, width: '100%' }}
-                        />
+                        </div>
+                        <div style={{ color: '#cbd5e1' }}>→</div>
+                        <div style={{ flex: 1 }}>
+                          <input
+                            type="number"
+                            placeholder="To Roll No."
+                            value={taskForm.roll_end}
+                            onChange={(e) => setTaskForm(f => ({ ...f, roll_end: e.target.value }))}
+                            style={{ ...input, width: '100%' }}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
-                      Leave empty to include all roles. If set, only students in this range receive the task.
-                    </p>
-                  </div>
+                  </>
                 )}
               </div>
 

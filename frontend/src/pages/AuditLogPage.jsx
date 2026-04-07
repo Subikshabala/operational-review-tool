@@ -101,7 +101,32 @@ export default function AuditLogPage() {
                   </div>
                 </div>
                 
-                <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                {log.new_values && (
+                  <div style={{ 
+                    marginTop: 10, padding: '10px 14px', background: '#f8fafc', 
+                    borderRadius: 8, fontSize: 12, color: '#475569', border: '1px dotted #e2e8f0' 
+                  }}>
+                    {log.action === 'BULK_CREATE_TASK' || log.action === 'CREATE_TASK' ? (
+                      <div>
+                        <strong>Task:</strong> {log.new_values.title} 
+                        {log.new_values.count > 1 && <span style={{ marginLeft: 8, color: '#059669', fontWeight: 600 }}>(Targeted {log.new_values.count} users)</span>}
+                        {log.new_values.filters && (
+                          <div style={{ marginTop: 4, color: '#64748b', fontSize: 11 }}>
+                            Filters: {log.new_values.filters.role_names?.join(', ') || 'All Roles'} 
+                            {' in '} 
+                            {log.new_values.filters.department_names?.join(', ') || 'All Depts'}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
+                        {JSON.stringify(log.new_values, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ 
                     fontSize: 13, color: '#475569', display: 'flex', alignItems: 'center', gap: 6 
                   }}>
