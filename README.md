@@ -1,363 +1,150 @@
-# 🎓 College Academic Review System
+# 🎓 Academic Performance Review & Strategic Monitoring System
 
-A full-stack web application for colleges to track, review, and manage academic performance metrics across departments — with role-based access, automated status calculation, and audit logging.
+An enterprise-grade, full-stack operational review solution designed for higher education institutions. This platform facilitates data-driven academic management through performance metric tracking, automated status assessments, and scalable task-based corrective actions.
 
 ---
 
 ## 📌 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
+- [Core Objectives](#core-objectives)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Advanced Functionality](#advanced-functionality)
 - [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Database Setup](#database-setup)
-- [API Reference](#api-reference)
-- [User Roles](#user-roles)
-- [How It Works](#how-it-works)
-- [Screenshots](#screenshots)
+- [System Configuration](#system-configuration)
+- [Data Model](#data-model)
+- [API Documentation](#api-documentation)
+- [Governance & Roles](#governance--roles)
 
 ---
 
-## Overview
+## Core Objectives
 
-Colleges traditionally track academic performance manually using spreadsheets — data gets scattered, comparisons are hard, and accountability is low. This system solves that by providing a **centralized digital platform** where:
-
-- Admins configure performance targets
-- Faculty enter actual values each review period
-- The system auto-flags performance as 🟢 Green / 🟡 Yellow / 🔴 Red
-- HODs review results and assign corrective tasks
-- Dashboards show trends and analytics over time
+Educational institutions often struggle with fragmented academic performance data. This system centralizes institutional oversight by:
+- **Standardizing Metrics**: Defining clear Key Performance Indicators (KPIs) with institutional targets.
+- **Automated Monitoring**: Utilizing real-time status calculation (🟢/🟡/🔴) based on predefined thresholds.
+- **Enhanced Accountability**: Providing immutable audit trails for every administrative and academic action.
+- **Strategic Intervention**: Enabling rapid, scalable task distribution to address performance gaps.
 
 ---
 
-## Features
+## Key Features
 
-- 🔐 **JWT Authentication** with secure login/logout
-- 👥 **4 Role Levels** — Admin, HOD, Faculty, Student
-- 📊 **Performance Metrics** with configurable targets and thresholds
-- 🗓️ **Review Sessions** — monthly/quarterly/semesterly cycles
-- 🚦 **Auto Status Calculation** — Green / Yellow / Red based on actual vs target
-- ✅ **Task Management** — assign and track corrective actions
-- 📈 **Analytics Dashboard** — charts and KPI summaries
-- 🔒 **Session Locking** — submitted sessions cannot be edited
-- 🏫 **College Isolation** — multi-college support, data never crosses
-- 📋 **Audit Log** — every action is logged with user, timestamp, and IP
+- 🔐 **Institutional Security**: JWT-based authentication with university-level data isolation.
+- 📂 **Bulk User Provisioning**: Automated student and faculty onboarding via Excel (XLSX/CSV) processing.
+- 🚀 **Scalable Task Assignment**: High-performance distribution of corrective actions using optimized database batch operations.
+- 📊 **Dynamic Analytics**: Visualized KPIs via interactive charts and departmental performance summaries.
+- 🔒 **Integrity Controls**: Structural session locking upon submission to ensure historical data consistency.
+- 📋 **Comprehensive Auditing**: Granular event logging including IP tracking, user context, and record-level changes.
 
 ---
 
-## Tech Stack
+## Advanced Functionality
 
-| Layer | Technology |
+### 📡 High-Scale Task Distribution
+The platform leverages optimized SQL `INSERT ... SELECT` architecture to facilitate institutional-grade scalability. Admins can target thousands of recipients simultaneously based on:
+- **Multi-Role Filtering**: Combinations of HODs, Faculty, and Students.
+- **Multi-Department Scoping**: Cross-departmental task distribution.
+- **Student-Specific Ranges**: Targeting by Roll Number identifiers for precise academic intervention.
+
+### 📥 Automated Member Onboarding
+The system integrates an Excel parsing engine that allows for rapid provisioning of academic staff and students. 
+- Supported formats: `.xlsx`, `.xls`, `.csv`
+- Validation logic ensures data integrity for required fields (Name, Email, Role, Department).
+
+---
+
+## System Architecture
+
+| Component | Technology |
 |-------|-----------|
-| Frontend | React.js, Zustand, Recharts, Axios |
-| Backend | Node.js, Express.js |
-| Database | PostgreSQL |
-| Auth | JWT (JSON Web Tokens) |
-| Styling | Custom CSS (Dark Theme) |
-| Security | Helmet, CORS, Rate Limiting, bcrypt |
-
----
-
-## Project Structure
-
-```
-college-review/
-├── backend/
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── membersController.js
-│   │   ├── reviewItemsController.js
-│   │   ├── sessionsController.js
-│   │   ├── actionItemsController.js
-│   │   └── analyticsController.js
-│   ├── db/
-│   │   ├── pool.js
-│   │   └── schema.sql
-│   ├── middleware/
-│   │   ├── auth.js
-│   │   └── errorHandler.js
-│   ├── routes/
-│   │   └── index.js
-│   ├── .env
-│   ├── .env.example
-│   ├── package.json
-│   └── server.js
-│
-└── frontend/
-    ├── public/
-    │   └── index.html
-    ├── src/
-    │   ├── components/
-    │   │   └── Layout.jsx
-    │   ├── pages/
-    │   │   ├── LoginPage.jsx
-    │   │   ├── RegisterPage.jsx
-    │   │   ├── DashboardPage.jsx
-    │   │   ├── MetricsPage.jsx
-    │   │   ├── SessionsPage.jsx
-    │   │   ├── SessionDetailPage.jsx
-    │   │   ├── MembersPage.jsx
-    │   │   ├── TasksPage.jsx
-    │   │   └── AuditLogPage.jsx
-    │   ├── services/
-    │   │   └── api.js
-    │   ├── store/
-    │   │   └── authStore.js
-    │   ├── App.jsx
-    │   ├── index.js
-    │   └── index.css
-    ├── .env
-    ├── .env.example
-    └── package.json
-```
+| **Frontend** | React.js (Single Page Application) |
+| **State Management** | Zustand |
+| **Backend** | Node.js (Express Framework) |
+| **Database** | PostgreSQL (Relational) |
+| **Authentication** | JSON Web Tokens (JWT) |
+| **Data Processing** | XLSX Library, Multer |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
+- Node.js (v18.0.0 or higher)
+- PostgreSQL (v14.0 or higher)
+- npm or yarn package manager
 
-- Node.js v18+
-- PostgreSQL v14+
-- npm or yarn
+### Installation
 
-### 1. Clone the repository
+1. **Repository Setup**
+   ```bash
+   git clone https://github.com/your-username/college-review-system.git
+   cd college-review-system
+   ```
 
-```bash
-git clone https://github.com/your-username/college-review-system.git
-cd college-review-system
-```
+2. **Database Initialization**
+   ```bash
+   # Create database environment
+   psql -U postgres -c "CREATE DATABASE college_review;"
 
-### 2. Set up the database
+   # Deploy schema
+   psql -U postgres -d college_review -f backend/db/schema.sql
+   ```
 
-```bash
-# Create the database
-psql -U postgres -c "CREATE DATABASE college_review;"
+3. **Environment Configuration**
+   Configure `.env` files in both `/backend` and `/frontend` directories. Refer to `Environment Variables` section for specific keys.
 
-# Load the schema
-psql -U postgres -d college_review -f backend/db/schema.sql
-
-# Fix: add missing updated_at column to review_entries
-psql -U postgres -d college_review -c \
-  "ALTER TABLE review_entries ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();"
-```
-
-> **Linux users:** If you get a peer authentication error, use:
-> `sudo -u postgres psql -d college_review -f backend/db/schema.sql`
-
-### 3. Configure environment variables
-
-```bash
-# Backend
-cp backend/.env.example backend/.env
-# Edit backend/.env and set your DB_PASSWORD and JWT_SECRET
-
-# Frontend
-cp frontend/.env.example frontend/.env
-# Verify REACT_APP_API_URL=http://localhost:5000/api
-```
-
-### 4. Install dependencies and run
-
-**Terminal 1 — Backend:**
-```bash
-cd backend
-npm install
-npm run dev
-# ✅ Server running on http://localhost:5000
-```
-
-**Terminal 2 — Frontend:**
-```bash
-cd frontend
-npm install
-npm start
-# ✅ App opens at http://localhost:3000
-```
-
-### 5. Register your college
-
-Go to `http://localhost:3000/register` and create your college + admin account.
-
-> ⚠️ The Register page is **one-time only**. It creates a new college + admin user. To add more users, use the **Members** page inside the app after logging in.
+4. **Bootstrapping**
+   **Backend:**
+   ```bash
+   cd backend && npm install && npm run dev
+   ```
+   **Frontend:**
+   ```bash
+   cd frontend && npm install && npm start
+   ```
 
 ---
 
-## Environment Variables
+## System Configuration
 
-### Backend (`backend/.env`)
-
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=college_review
-DB_USER=postgres
-DB_PASSWORD=your_postgres_password
-
-PORT=5000
-FRONTEND_URL=http://localhost:3000
-
-JWT_SECRET=your_super_secret_key_here
-JWT_EXPIRES_IN=24h
-```
-
-### Frontend (`frontend/.env`)
-
-```env
-REACT_APP_API_URL=http://localhost:5000/api
-```
+### Backend Environment Variables (`backend/.env`)
+| Variable | Description |
+|----------|-------------|
+| `DB_PASSWORD` | PostgreSQL user password |
+| `JWT_SECRET` | Primary security key for token signing |
+| `PORT` | Local server port (Default: 5000) |
+| `FRONTEND_URL` | Trusted origin for CORS policy |
 
 ---
 
-## Database Setup
+## Governance & Roles
 
-The system uses **7 PostgreSQL tables**:
-
-| Table | Description |
-|-------|-------------|
-| `colleges` | College records (name, code) |
-| `users` | All users with role and college linkage |
-| `review_items` | Performance metrics with targets and thresholds |
-| `review_sessions` | Review periods (monthly, quarterly, etc.) |
-| `review_entries` | Actual values entered per metric per session |
-| `action_items` | Tasks assigned to fix underperforming areas |
-| `audit_logs` | Immutable log of all system actions |
+| Role | Operational Scope |
+|------|-------------------|
+| **System Administrator** | College configuration, institutional settings, and global metrics management. |
+| **HOD (Head of Dept)** | Departmental review session oversight, bulk task creation, and performance analysis. |
+| **Faculty Member** | Data entry for assigned metrics and localized corrective task management. |
+| **Student** | Read-only access to relevant dashboards and assigned academic intervention tasks. |
 
 ---
 
-## API Reference
+## API Documentation
 
-### Auth
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Create college + admin |
-| POST | `/api/auth/login` | Login, returns JWT |
-| GET | `/api/auth/me` | Get current user profile |
+### Core Endpoints
 
-### Members
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/members` | List all college members |
-| POST | `/api/members` | Add new member |
-| PUT | `/api/members/:id` | Update member |
-| DELETE | `/api/members/:id` | Remove member |
-
-### Metrics
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/metrics` | List all performance metrics |
-| POST | `/api/metrics` | Create new metric |
-| PUT | `/api/metrics/:id` | Update metric |
-| DELETE | `/api/metrics/:id` | Delete metric |
-
-### Sessions
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/sessions` | List all review sessions |
-| POST | `/api/sessions` | Create new session |
-| GET | `/api/sessions/:id` | Get session detail with entries |
-| PUT | `/api/sessions/:id/entries` | Save/update a metric entry |
-| POST | `/api/sessions/:id/submit` | Submit and lock session |
-| DELETE | `/api/sessions/:id` | Delete draft session |
-
-### Tasks
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/tasks` | List all tasks |
-| POST | `/api/tasks` | Create task |
-| PUT | `/api/tasks/:id` | Update task |
-| DELETE | `/api/tasks/:id` | Delete task |
-
-### Analytics
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/analytics/dashboard` | Dashboard KPIs and charts |
-| GET | `/api/analytics/audit-log` | Full audit history |
-
----
-
-## User Roles
-
-| Role | Access |
-|------|--------|
-| **Admin** | Full access — manage college, users, metrics, sessions, tasks |
-| **HOD** | Manage metrics, create/submit sessions, assign tasks |
-| **Faculty** | Enter review data, create tasks |
-| **Student** | View-only — dashboards and reports |
-
-### Adding Users
-
-1. Log in as **Admin**
-2. Go to **Faculty & Staff** → click **+ Add Member**
-3. Set their name, email, password, role, and department
-4. They log in at `/login` with their email and password
-
-> Do **not** use the `/register` page to add more users — that creates an entirely new college.
-
----
-
-## How It Works
-
-### Status Auto-Calculation
-
-When a faculty member enters an actual value for a metric, the system automatically calculates a performance status:
-
-**For `higher_better` metrics** (e.g. pass rate, placement %):
-```
-percentage = (actual / target) × 100
-```
-
-**For `lower_better` metrics** (e.g. dropout rate, complaints):
-```
-percentage = ((2 × target − actual) / target) × 100
-```
-
-**Status thresholds** (configurable per metric):
-```
-percentage ≥ warning_threshold (default 80%)  → 🟢 Green
-percentage ≥ critical_threshold (default 60%) → 🟡 Yellow
-percentage <  critical_threshold              → 🔴 Red
-```
-
-### Review Workflow
-
-```
-1. Admin creates Performance Metrics with targets
-        ↓
-2. HOD/Faculty creates a Review Session (monthly/quarterly)
-        ↓
-3. Faculty enters actual values for each metric
-        ↓
-4. System auto-calculates Green/Yellow/Red status
-        ↓
-5. HOD reviews and assigns Tasks for Red/Yellow items
-        ↓
-6. HOD submits the session (locks it permanently)
-        ↓
-7. Dashboard shows trends and analytics over time
-```
-
----
-
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| `Peer authentication failed` | Use `sudo -u postgres psql` or set a password with `-h localhost` |
-| `Data not saving` | Check `backend/.env` has the correct `DB_PASSWORD` |
-| `CORS error` | Make sure `FRONTEND_URL=http://localhost:3000` in backend `.env` |
-| `Token expired` | Log out and log back in |
-| `Tables don't exist` | Run `schema.sql` against the database |
-| `updated_at column missing` | Run the `ALTER TABLE` fix in Getting Started step 2 |
+| Resource | Methods | Primary Usage |
+|----------|---------|---------------|
+| **/api/auth** | `POST` | User authentication and institutional registration. |
+| **/api/members** | `GET, POST, PUT` | User management and **Bulk Upload** operations. |
+| **/api/sessions** | `GET, POST, PUT` | Performance review cycle management and status locking. |
+| **/api/tasks** | `GET, POST, PUT` | **Scalable distribution** of corrective actions. |
+| **/api/analytics** | `GET` | Aggregated reporting and **Audit Trail** access. |
 
 ---
 
 ## License
-
-MIT License — free to use, modify, and distribute.
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-
-> Built with ❤️ for academic institutions to make performance reviews transparent, data-driven, and accountable.
+*Developed with a commitment to academic excellence and institutional transparency.*
